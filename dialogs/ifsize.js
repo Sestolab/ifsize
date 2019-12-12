@@ -16,10 +16,23 @@ CKEDITOR.dialog.add('ifsizeDialog', function(editor){
 						validate: CKEDITOR.dialog.validate.notEmpty(lang.fileEmpty)
 					},
 					{
-						type: 'button',
-						id: 'browse',
-						label: editor.lang.common.browseServer,
-						filebrowser: 'basic:file'
+						type: 'hbox',
+						children: [
+							{
+								type: 'button',
+								id: 'browseServer',
+								label: editor.lang.common.browseServer,
+								filebrowser: 'basic:file',
+							},
+							{
+								type: 'file',
+								id: 'localFile',
+								label: lang.localFile,
+								onChange: function(){
+									this.getDialog().setValueOf('basic', 'file', this.getValue());
+								}
+							}
+						]
 					},
 					{
 						type: 'text',
@@ -33,19 +46,26 @@ CKEDITOR.dialog.add('ifsizeDialog', function(editor){
 		],
 
 		onOk: function(){
-			var n = this.getValueOf('basic', 'decimal'),
-				units = ['B', 'KB', 'MB', 'GB', 'TB'],
-				xhr = new XMLHttpRequest();
+			var n = this.getValueOf('basic', 'decimal').slice(0,2),
+				localFile = this.getContentElement('basic', 'localFile').getInputElement().$.files[0];
 
-			xhr.open('HEAD', this.getValueOf('basic', 'file'), true);
-			xhr.onreadystatechange = function(){
-				if (this.readyState == this.DONE){
-					fsize = parseInt(xhr.getResponseHeader('Content-Length'));
-					i = Math.floor(Math.log(fsize) / Math.log(1024));
-					editor.insertHtml((fsize / Math.pow(1024, i)).toFixed(n) + ' ' + units[i]);
-				}
-			};
-			xhr.send();
+			if (localFile){
+				ifsize(localFile.size);
+				return this.setValueOf('basic', 'localFile', '');
+			}else{
+				var xhr = new XMLHttpRequest();
+				xhr.open('HEAD', this.getValueOf('basic', 'file'), true);
+				xhr.onreadystatechange = function(){
+					if (this.readyState == this.DONE)
+						ifsize(parseInt(xhr.getResponseHeader('Content-Length')));
+				};
+				xhr.send();
+			}
+			function ifsize(size){
+				var units = ['B', 'KB', 'MB', 'GB', 'TB'],
+					i = Math.floor(Math.log(size) / Math.log(1024));
+				editor.insertHtml((size / Math.pow(1024, i)).toFixed(n) + ' ' + units[i]);
+			}
 		}
 	};
 });
