@@ -26,7 +26,7 @@ CKEDITOR.dialog.add('ifsizeDialog', function(editor){
 						maxLength: 2,
 						id: 'decimal',
 						label: lang.decimalLabel,
-						default: 2
+						default: editor.config.ifsizeDecimal || 2,
 					}
 				]
 			}
